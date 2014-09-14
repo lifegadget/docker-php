@@ -44,8 +44,8 @@ RUN chown -R www-data:www-data /app
 RUN apt-get install -y nodejs build-essential nodejs-legacy npm
 WORKDIR /app
 RUN cd /app && export USER=root; npm install commander chalk exec-sync
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/bootstrapper.js /app/bootstrapper.js
-RUN chmod +x /app/bootstrapper.js
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker-php.js /app/docker-php.js
+RUN chmod +x /app/docker-php.js
 # Include ascii logos
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker.txt /app/resources/docker.txt
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php.txt /app/resources/php.txt
@@ -69,7 +69,7 @@ VOLUME /website
 # Reset to default interactivity
 ENV DEBIAN_FRONTEND newt
 
-ENTRYPOINT ["/app/bootstrapper.js"]
+ENTRYPOINT ["/app/docker-php.js"]
 CMD ["start"]
 
 
