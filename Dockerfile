@@ -4,8 +4,7 @@ MAINTAINER LifeGadget <contact-us@lifegadget.co>
 # Setup Base Environment
 ENV DEBIAN_FRONTEND noninteractive
 # apt-get magic
-RUN echo "# Adding Apt Magic" \
-	&& echo 'APT::Install-Recommends "0"; \n\
+RUN echo 'APT::Install-Recommends "0"; \n\
 		APT::Get::Assume-Yes "true"; \n\
 		APT::Get::force-yes "true"; \n\
 		APT::Install-Suggests "0";' \
@@ -16,28 +15,40 @@ RUN echo "# Adding Apt Magic" \
 		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-backports main restricted universe multiverse \n\
 		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-security main restricted universe multiverse\n\
 		deb http://ppa.launchpad.net/ondrej/php5/ubuntu trusty main\n\
-		deb-src http://ppa.launchpad.net/ondrej/php5/ubuntu trusty main" \
+		deb-src http://ppa.launchpad.net/ondrej/php5/ubuntu trusty main" 
 		> /etc/apt/sources.list
 RUN apt-get update
 
 # Install PHP
-RUN apt-get install -y php5
-RUN apt-get install -y php5-mcrypt php5-fpm php5-cli
+RUN apt-get install -y \
+	php5 \
+	php5-cli
+# Install PHP modules
+RUN apt-get install -y \
+	php5-mcrypt \
+	php5-fpm 
 
-RUN sed -i '/daemonize /c \
-daemonize = no' /etc/php5/fpm/php-fpm.conf
+# Baseline PHP-FPM Configuration
+RUN rm /etc/php5/fpm/php-fpm.conf
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.ini /etc/php5/fpm/php-fpm.conf
+
+# Branch based on 'container managed' or 'host configured'
+# (because Dockerfile doesn't support conditional logic we'll go outside it for this)
+# ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/pool-setup.sh /tmp/pool-setup.sh
+# RUN ['/bin/bash','/tmp/pool-setup.sh']
+
 
 RUN sed -i '/^listen /c \
 listen = 0.0.0.0:9000' /etc/php5/fpm/pool.d/www.conf
 
 RUN sed -i 's/^listen.allowed_clients/;listen.allowed_clients/' /etc/php5/fpm/pool.d/www.conf
 
-RUN mkdir -p /srv/http && \
-    echo "<?php phpinfo(); ?>" > /srv/http/index.php && \
-    chown -R www-data:www-data /srv/http
+RUN mkdir -p /app && \
+    echo "<?php phpinfo(); ?>" > /app/index.php && \
+    chown -R www-data:www-data /app
 
 EXPOSE 9000
-VOLUME /srv/http
+VOLUME /website
 # Reset to default interactivity
 ENV DEBIAN_FRONTEND newt
 
