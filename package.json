@@ -1,0 +1,22 @@
+{
+  "name": "thematic-ghost",
+  "description": "An asset pipeline for Ghost theme development",
+  "version": "0.3.1",
+  "private": true,
+  "author": "Ken Snyder <ken@ken.net>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lifegadget/docker-php"
+  },
+  "scripts": {
+    "start": "node resources/bootstrapper.js",
+    "test": "jshint resources/*.js"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "chalk": "^0.5.1",
+    "commander": "^2.3.0",
+    "exec-sync": "^0.1.6"
+  }
+}

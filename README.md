@@ -30,7 +30,7 @@ For those on *\*nix* systems it usually makes sense to connect your NGINX or Apa
 
 	1. Container managed
 
-		If you're running a single pool -- which is often the case -- then you can simply set the `FPM_SOCKET_DIRECTORY` environment variable and a reasonable default pool configuration will be built for you using Unix sockets. variable to either `port` or `socket` in the Docker *run* command and the configuration file will be automagically created for you by the container. Blamo. 
+		If you're running a single pool -- which is often the case -- then you can simply set either the `FPM_SOCKET_DIRECTORY` environment or the `FPM_PORT_variable and a reasonable default pool configuration will be built for you using Unix sockets. variable to either `port` or `socket` in the Docker *run* command and the configuration file will be automagically created for you by the container. Blamo. 
 
 		Here's an example of setting it to run a single socket-connected application:
 
