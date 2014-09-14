@@ -44,10 +44,11 @@ RUN chown -R www-data:www-data /app
 RUN apt-get install -y nodejs build-essential nodejs-legacy npm
 WORKDIR /app
 RUN cd /app && export USER=root; npm install commander chalk exec-sync
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/bootstrapper.js /app
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/bootstrapper.js /app/bootstrapper.js
+RUN chmod +x /app/bootstrapper.js
 # Include ascii logos
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker.txt /app/resources
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php.txt /app/resources
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker.txt /app/resources/docker.txt
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php.txt /app/resources/php.txt
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
@@ -68,7 +69,7 @@ VOLUME /website
 # Reset to default interactivity
 ENV DEBIAN_FRONTEND newt
 
-ENTRYPOINT ["bootstrapper.js"]
+ENTRYPOINT ["/app/bootstrapper.js"]
 CMD ["start"]
 
 
