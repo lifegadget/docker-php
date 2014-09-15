@@ -31,8 +31,9 @@ var shell = function (params,options) {
 		var timeout = setTimeout(function() {
 			reject(new Error('Timed out'));
 		}, options.timeout);
+		var shellCommand;
 		try {
-			var shellCommand = spawn(params.shift(),params);
+			shellCommand = spawn(params.shift(),params);
 		} catch (err) {
 			clearTimeout(timeout);
 			reject(err);
@@ -46,7 +47,6 @@ var shell = function (params,options) {
 			errorMessage = errorMessage + data;
 		});
 		shellCommand.on('close', function (code) {
-			console.log('close happened');
 			if(code !== 0) {
 				clearTimeout(timeout);
 				reject({code:code, message:errorMessage});
@@ -106,20 +106,22 @@ var getPhpVersion = function() {
 			}
 		);
 	});
-}
+};
 
 // ### Start FPM Daemon ###
 // ----------------------
 var fpmDaemon = function() {
-	shell('/usr/sbin/php5-fpm').then(
-		function(results) {
-			resolve(results);
-		},
-		function(err) {
-			reject(err);
-		}
-	);
-}
+	return new RSVP.Promise(function(resolve,reject) {
+		shell('/usr/sbin/php5-fpm').then(
+			function(results) {
+				resolve(results);
+			},
+			function(err) {
+				reject(err);
+			}
+		);		
+	});
+};
 
 // ## Program options ##
 // ---------------------
@@ -148,7 +150,7 @@ program
 					function(err) {
 						console.log(chalk.red('Problem starting FPM: ') + JSON.stringify(err));
 					}
-				});
+				);
 			}
 		);
 	});
@@ -173,13 +175,6 @@ program
 				console.log('FPM version: %s',results);
 			}
 		);
-	});
-
-program 
-	.command('enter')
-	.description('allows shell access to the container')
-	.action(function(options) {
-		var giveAccess = execSync('/bin/bash');
 	});
 
 	
