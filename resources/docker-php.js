@@ -204,7 +204,7 @@ if(process.argv.length === 2) {
 var atException = function(err) {
 	console.error(chalk.bold.red('Unhandled exception:\n'));
 	console.error(chalk.grey(err.stack));
-	atExit(1);
+	process.exit(1);
 };
 
 process.on('uncaughtException', atException);
