@@ -37,6 +37,12 @@ RUN apt-get install -y \
 RUN apt-get install -y \
 	php5-mcrypt \
 	php5-fpm
+# Create symlink to FPM to have more standard access to command
+# (this appears to happen on Ubuntu but not OSX for instance)
+RUN if [ -f /usr/sbin/php5-fpm ]; then \
+		ln -s /usr/sbin/php5-fpm /usr/sbin/php-fpm; \
+	fi;
+	
 # Helpful helpers
 RUN apt-get install -y vim curl
 

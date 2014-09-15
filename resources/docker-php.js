@@ -96,7 +96,7 @@ var shellSync = function (params,options) {
 // > utility function
 var getPhpVersion = function() {
 	return new RSVP.Promise(function(resolve,reject) {
-		shell(['php-fpm','-v']).then(
+		shell(['php5-fpm','-v']).then(
 			function(results) {
 				var versionNumber = results.split(' ')[1];
 				resolve(versionNumber);
