@@ -32,8 +32,7 @@ RUN echo " \
 
 # Install PHP
 RUN apt-get install -y \
-	php5 \
-	php5-cli
+	php5 
 # Install PHP modules
 RUN apt-get install -y \
 	php5-mcrypt \
@@ -67,17 +66,20 @@ ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.ini /etc/php5/fpm/php-fpm.conf
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.ini /etc/php5/fpm/php-fpm.ini
 
 # Branch based on 'container managed' or 'host configured'
 # (because Dockerfile doesn't support conditional logic we'll go outside it for this)
 # ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/pool-setup.sh /tmp/pool-setup.sh
 # RUN ['/bin/bash','/tmp/pool-setup.sh']
 
-
-RUN sed -i '/^listen /c listen = 0.0.0.0:9000' /etc/php5/fpm/pool.d/www.conf
-
-RUN sed -i 's/^listen.allowed_clients/;listen.allowed_clients/' /etc/php5/fpm/pool.d/www.conf
+# Add a default pool service for now, this default will be removed automatically when the first 
+# service is added
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-default.ini /etc/php5/fpm/conf.d
+# Add some generic templates for use later when adding services
+RUN mkdir -p /etc/php5/fpm/templates
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-header.ini /etc/php5/fpm/templates/php-pool-generic-header.ini
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-generic-config.ini
 
 EXPOSE 9000
 # Reset to default interactivity
@@ -85,7 +87,5 @@ ENV DEBIAN_FRONTEND newt
 
 ENTRYPOINT ["/app/docker-php.js"]
 CMD ["start"]
-
-# ENTRYPOINT ["/bin/bash"]
 
 
