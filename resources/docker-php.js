@@ -172,7 +172,8 @@ program
 		options = extend({},options);
 		getPhpVersion().then(
 			function(results) {
-				console.log('FPM version: %s',results);
+				console.log('Docker-PHP Bootstrap Script: %s', program.version() )
+				console.log('FPM version: %s',chalk.bold(results));
 			}
 		);
 	});
@@ -198,3 +199,13 @@ if(process.argv.length === 2) {
 	displayLogo();
 	program.help();
 }
+
+// Handle uncaught exceptions
+var atException = function(err) {
+	console.error(chalk.bold.red('Unhandled exception:\n'));
+	console.error(chalk.grey(err.stack));
+	atExit(1);
+};
+
+process.on('uncaughtException', atException);
+
