@@ -138,7 +138,7 @@ program
 		console.log('Supervisor script version: %s', chalk.bold(program.version()));
 		getPhpVersion().then(
 			function(results) {
-				console.log('PHP/FPM version: %s',chalk.bold{results});
+				console.log('PHP/FPM version: %s',chalk.bold(results));
 				/* TODO: get pools */
 				console.log('Registered pools: %s', chalk.dim(JSON.stringify(pools)));
 				fpmDaemon().then(
