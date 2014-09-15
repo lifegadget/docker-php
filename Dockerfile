@@ -66,7 +66,7 @@ ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.ini /etc/php5/fpm/php-fpm.ini
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.ini /etc/php5/fpm/php-fpm.conf
 
 # Branch based on 'container managed' or 'host configured'
 # (because Dockerfile doesn't support conditional logic we'll go outside it for this)
@@ -75,11 +75,13 @@ ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php
 
 # Add a default pool service for now, this default will be removed automatically when the first 
 # service is added
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-default.ini /etc/php5/fpm/conf.d
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-default.ini /etc/php5/fpm/pool.d/default.conf
 # Add some generic templates for use later when adding services
 RUN mkdir -p /etc/php5/fpm/templates
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-header.ini /etc/php5/fpm/templates/php-pool-generic-header.ini
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-generic-config.ini
+# Add the scan directories to PHP-FPM
+RUN export PHP_INI_SCAN_DIR="/etc/php5/conf.d"
 
 EXPOSE 9000
 # Reset to default interactivity
