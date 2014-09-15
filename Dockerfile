@@ -36,12 +36,14 @@ RUN apt-get install -y \
 # Install PHP modules
 RUN apt-get install -y \
 	php5-mcrypt \
-	php5-fpm 
+	php5-fpm
+# Helpful helpers
+RUN apt-get install -y vim curl
 
-# Install Node and dependencies for bootstrapper
+# Install Node and dependencies for CLI/bootstrapper
 RUN apt-get install -y nodejs build-essential nodejs-legacy npm
 WORKDIR /app
-RUN cd /app && export USER=root; npm install commander chalk exec-sync
+RUN cd /app && export USER=root; npm install commander chalk rsvp xtend
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker-php.js /app/docker-php.js
 RUN chmod +x /app/docker-php.js
 
@@ -57,7 +59,7 @@ VOLUME /app_root
 RUN mkdir -p /app/resources
 # to start, however, we'll just add a single index.php file
 # at the root that displays the phpinfo
-RUN echo "<?php phpinfo(); ?>" > /app/index.php
+RUN echo "<?php phpinfo(); ?>" > /app/content/index.php
 RUN chown -R www-data:www-data /app
 
 # Include ascii logos
@@ -80,8 +82,8 @@ ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php
 RUN mkdir -p /etc/php5/fpm/templates
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-header.ini /etc/php5/fpm/templates/php-pool-generic-header.ini
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-generic-config.ini
-# Add the scan directories to PHP-FPM
-RUN export PHP_INI_SCAN_DIR="/etc/php5/conf.d"
+# Remove dummy 
+
 
 EXPOSE 9000
 # Reset to default interactivity

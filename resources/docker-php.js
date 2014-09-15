@@ -1,19 +1,127 @@
 #!/usr/bin/env node
 'use strict';
+/* exported shell,shellSync */
 
 var 
 	program	= require('commander'),
 	fs = require('fs'),
-	execSync = require('exec-sync'),
+	RSVP = require('rsvp'),
+	extend = require('xtend'),
 	chalk = require('chalk');
 	
+// ### Display Logo ###
+// -------------------
 var displayLogo = function() {
 	var phpLogo = fs.readFileSync('resources/php.txt',{ encoding: 'utf8' });
 	var dockerLogo = fs.readFileSync('resources/docker.txt',{ encoding: 'utf8' });
 	console.log('%s\n   %s', phpLogo, dockerLogo);
 };
 
-// ### Program options ###
+// ### Shell Command ###
+// -------------------
+var shell = function (params,options) {
+	options = extend({timeout: 4000},options);
+	var commandResponse = '';
+	var errorMessage ='';
+	// typecast params to an array
+	params = typeof params === 'string' ? [params] : params;
+	// resolve with a promise
+	return new RSVP.Promise(function(resolve,reject) {
+		var spawn = require('child_process').spawn;
+		var timeout = setTimeout(function() {
+			reject(new Error('Timed out'));
+		}, options.timeout);
+		try {
+			var shellCommand = spawn(params.shift(),params);
+		} catch (err) {
+			clearTimeout(timeout);
+			reject(err);
+		}
+		shellCommand.stdout.setEncoding('utf8');
+		shellCommand.stderr.setEncoding('utf8');
+		shellCommand.stdout.on('data', function (data) {
+			commandResponse = commandResponse + data;
+		});
+		shellCommand.stderr.on('data', function (data) {
+			errorMessage = errorMessage + data;
+		});
+		shellCommand.on('close', function (code) {
+			console.log('close happened');
+			if(code !== 0) {
+				clearTimeout(timeout);
+				reject({code:code, message:errorMessage});
+			} else {
+				clearTimeout(timeout);
+				resolve(commandResponse);
+			}
+		});
+	}); // return promise
+};
+
+// ###Synchronous shell###
+// > DOES NOT WORK 
+var shellSync = function (params,options) {
+	options = extend({pollingInterval: 100},options);
+	var shellResults = null;
+	shell(params,options).then(
+		function(results) {
+			console.log('Results: %s', results);
+			shellResults = results;
+			// return results;
+		},
+		function(err) {
+			console.log('Error: %s', err);
+			shellResults = err;
+			// return err;
+		}
+	);
+
+	var polling = setInterval(function() {
+		if(shellResults) {
+			console.log('results are available');
+			clearInterval(polling);
+			return shellResults;
+		}
+	},options.pollingInterval);
+	
+	while(1) {
+		// wait until a Promise is returned or is rejected 
+		// (and as a consequence sets the shellResults variable)
+	}
+	return shellResults;
+};
+
+// ### Get PHP Version ###
+// ---------------------
+// > utility function
+var getPhpVersion = function() {
+	return new RSVP.Promise(function(resolve,reject) {
+		shell(['php-fpm','-v']).then(
+			function(results) {
+				var versionNumber = results.split(' ')[1];
+				resolve(versionNumber);
+			},
+			function(err) {
+				reject(err);
+			}
+		);
+	});
+}
+
+// ### Start FPM Daemon ###
+// ----------------------
+var fpmDaemon = function() {
+	shell('/usr/sbin/php5-fpm').then(
+		function(results) {
+			resolve(results);
+		},
+		function(err) {
+			reject(err);
+		}
+	);
+}
+
+// ## Program options ##
 // ---------------------
 program 
 	.version('0.0.1');
@@ -24,11 +132,25 @@ program
 	.option('-r, --raw', 'Outputs results as pure JSON data')
 	.option('-v, --verbose', 'Shows all attributes of the lists versus just producing a simple named list')
 	.action(function(options) {
+		var pools = [];
+		options = extend({},options);
 		displayLogo();
-		console.log('Version: %s\n\n', chalk.bold(program.version()));
-		var fpmVersion = execSync('php-fpm -v | sed 1q | cut -d\' \' -f2');
-		console.log('Starting PHP FPM daemon [%s]', chalk.dim(fpmVersion));
-		var fpmResults = execSync('/usr/sbin/php5-fpm');
+		console.log('Supervisor script version: %s', chalk.bold(program.version()));
+		getPhpVersion().then(
+			function(results) {
+				console.log('PHP/FPM version: %s',chalk.bold{results});
+				/* TODO: get pools */
+				console.log('Registered pools: %s', chalk.dim(JSON.stringify(pools)));
+				fpmDaemon().then(
+					function() {
+						console.log(chalk.green('FPM process started!'));
+					}, 
+					function(err) {
+						console.log(chalk.red('Problem starting FPM: ') + JSON.stringify(err));
+					}
+				});
+			}
+		);
 	});
 
 program
@@ -37,15 +159,20 @@ program
 	.option('-r, --raw', 'Outputs results as pure JSON data')
 	.option('-v, --verbose', 'Shows all attributes of the lists versus just producing a simple named list')
 	.action(function(options) {
+		options = extend({},options);
 		displayLogo();
 	});
 	
 program 
-	.command('php')
+	.command('info')
 	.description('returns the version of PHP being used')
 	.action(function(options) {
-		var fpmVersion = execSync('php-fpm -v | sed 1q | cut -d\' \' -f2');
-		console.log('PHP FPM version: %s', chalk.bold(fpmVersion));
+		options = extend({},options);
+		getPhpVersion().then(
+			function(results) {
+				console.log('FPM version: %s',results);
+			}
+		);
 	});
 
 program 
