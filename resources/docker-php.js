@@ -28,7 +28,7 @@ program
 		console.log('Version: %s\n\n', chalk.bold(program.version()));
 		var fpmVersion = execSync('php-fpm -v | sed 1q | cut -d\' \' -f2');
 		console.log('Starting PHP FPM daemon [%s]', chalk.dim(fpmVersion));
-		var fpmResults = execSync('/etc/php5/sbin/php-fpm');
+		var fpmResults = execSync('/usr/sbin/php5-fpm');
 	});
 
 program
