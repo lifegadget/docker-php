@@ -144,7 +144,7 @@ var exec = function(instruction, options) {
 			resolve(stdout,stderr);
 		});
 	});
-}
+};
 
 // ## Program options ##
 // ---------------------
@@ -166,8 +166,8 @@ program
 			function(phpVersion) {
 				console.log('PHP/FPM version: %s',chalk.bold(phpVersion));
 				/* TODO: get pools */
-				if(option.addTcp) {
-					console.log(' - adding TCP/IP based pool %s', )
+				if(options.addTcp) {
+					console.log(' - adding TCP/IP based pool %s', options.addTcp);
 				}
 				console.log('Registered pools: %s', chalk.dim(JSON.stringify(pools)));
 				fpmDaemon().then(
