@@ -78,7 +78,7 @@ ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.conf /etc/php5/fpm/php-fpm.conf
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-fpm.conf /etc/php5/fpm/php-fpm.conf
 
 # Branch based on 'container managed' or 'host configured'
 # (because Dockerfile doesn't support conditional logic we'll go outside it for this)
