@@ -52,6 +52,7 @@ WORKDIR /app
 RUN cd /app && export USER=root; npm install commander chalk rsvp xtend fibers debug
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker-php.js /app/docker-php.js
 RUN chmod +x /app/docker-php.js
+RUN ln -s /app/docker-php.js /usr/local/bin/docker-php
 
 # App Directory / Subdirectories
 RUN mkdir -p /app

@@ -105,7 +105,7 @@ var getPhpVersion = function() {
 // ----------------------
 var fpmDaemon = function() {
 	return new RSVP.Promise(function(resolve,reject) {
-		exec('/usr/sbin/php-fpm').then(
+		exec('/usr/sbin/php-fpm -c /etc/php5/fpm/php.ini -fpm-config /etc/php5/fpm/php-fpm.conf').then(
 			function(results) {
 				resolve(results);
 			},
