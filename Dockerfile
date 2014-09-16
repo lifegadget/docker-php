@@ -74,28 +74,23 @@ VOLUME /app_root
 # add convenience symlink to view 
 
 # Include ascii logos
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker.txt /app/resources/docker.txt
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php.txt /app/resources/php.txt
+ADD resources/docker.txt /app/resources/docker.txt
+ADD resources/php.txt /app/resources/php.txt
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-fpm.conf /etc/php5/fpm/php-fpm.conf
+ADD resources/php-fpm.conf /etc/php5/fpm/php-fpm.conf
 # Baseline PHP.INI
 RUN rm /etc/php5/fpm/php.ini
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php.ini /etc/php5/fpm/php.ini
-
-# Branch based on 'container managed' or 'host configured'
-# (because Dockerfile doesn't support conditional logic we'll go outside it for this)
-# ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/pool-setup.sh /tmp/pool-setup.sh
-# RUN ['/bin/bash','/tmp/pool-setup.sh']
+ADD resources/php.ini /etc/php5/fpm/php.ini
 
 # Add a default pool service for now, this default will be removed automatically when the first 
 # service is added
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-default.ini /etc/php5/fpm/pool.d/default.conf
+ADD resources/php-pool-default.ini /etc/php5/fpm/pool.d/default.conf
 # Add some generic templates for use later when adding services
 RUN mkdir -p /etc/php5/fpm/templates
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-header.ini /etc/php5/fpm/templates/php-pool-generic-header.ini
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-generic-config.ini
+ADD resources/php-pool-generic-header.ini /etc/php5/fpm/templates/php-pool-generic-header.ini
+ADD resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-generic-config.ini
 # Remove dummy 
 
 
