@@ -70,6 +70,7 @@ RUN chown -R www-data:www-data /app
 # make a symbolic link with a friendlier name for host's run command
 RUN ln -s /app/content /app_root
 VOLUME /app_root
+# add convenience symlink to view 
 
 # Include ascii logos
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker.txt /app/resources/docker.txt
@@ -77,7 +78,7 @@ ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.ini /etc/php5/fpm/php-fpm.conf
+ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/php-conf-global.conf /etc/php5/fpm/php-fpm.conf
 
 # Branch based on 'container managed' or 'host configured'
 # (because Dockerfile doesn't support conditional logic we'll go outside it for this)
@@ -99,6 +100,6 @@ EXPOSE 9000
 ENV DEBIAN_FRONTEND newt
 
 ENTRYPOINT ["/app/docker-php.js"]
-CMD ["-d start"]
+CMD ["start"]
 
 

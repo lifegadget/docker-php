@@ -154,7 +154,8 @@ program
 program
 	.command('start')
 	.description('starts the PHP-FPM server; will create a "default" pool with an index.php to display')
-	.option('-r, --raw', 'Outputs results as pure JSON data')
+	.option('-a, --add-tcp <pool>', 'Adds a TCP based pool service where syntax is: "service-name:port"')
+	.option('-s, --add-socket <pool>', 'Adds a Unix socket based pool service where syntax is: "service-name"')
 	.option('-v, --verbose', 'Shows all attributes of the lists versus just producing a simple named list')
 	.action(function(options) {
 		var pools = [];
@@ -165,6 +166,9 @@ program
 			function(phpVersion) {
 				console.log('PHP/FPM version: %s',chalk.bold(phpVersion));
 				/* TODO: get pools */
+				if(option.addTcp) {
+					console.log(' - adding TCP/IP based pool %s', )
+				}
 				console.log('Registered pools: %s', chalk.dim(JSON.stringify(pools)));
 				fpmDaemon().then(
 					function() {
@@ -214,6 +218,9 @@ program
 			function(results) {
 				console.log('Docker-PHP Bootstrap Script: %s', program.version() );
 				console.log('FPM version: %s',chalk.bold(results));
+				exec('npm ls').then(function (nodeDep) {
+					console.log('Node dependencies:\n-----------\n%s', nodeDep);					
+				});
 			}
 		);
 	}
