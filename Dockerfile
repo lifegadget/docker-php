@@ -99,6 +99,6 @@ EXPOSE 9000
 ENV DEBIAN_FRONTEND newt
 
 ENTRYPOINT ["/app/docker-php.js"]
-CMD ["start"]
+CMD ["-d start"]
 
 

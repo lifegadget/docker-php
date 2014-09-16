@@ -105,7 +105,7 @@ var getPhpVersion = function() {
 // ----------------------
 var fpmDaemon = function() {
 	return new RSVP.Promise(function(resolve,reject) {
-		shell('php-fpm').then(
+		exec('/usr/sbin/php-fpm').then(
 			function(results) {
 				resolve(results);
 			},
@@ -120,7 +120,11 @@ var fpmProcesses = function() {
 	return new RSVP.Promise(function(resolve,reject) {
 		require('child_process').exec('ps -ef | grep -v grep | grep fpm', function(err, stdout, stderr) {
 			if (err) {
-				console.log(chalk.red('Problem getting FPM processes! [%s]\n') + chalk.grey(err.message), err.code);
+				if (err.code === 1) {
+					console.log(chalk.red('No FPM processes running!'), err.code);
+				} else {
+					console.log(chalk.red('Problem getting FPM processes! [%s]\n') + chalk.grey(err.message), err.code);					
+				}
 				reject(err);
 			}
 			resolve(stdout);
@@ -158,8 +162,8 @@ program
 		displayLogo();
 		console.log('Supervisor script version: %s', chalk.bold(program.version()));
 		getPhpVersion().then(
-			function(results) {
-				console.log('PHP/FPM version: %s',chalk.bold(results));
+			function(phpVersion) {
+				console.log('PHP/FPM version: %s',chalk.bold(phpVersion));
 				/* TODO: get pools */
 				console.log('Registered pools: %s', chalk.dim(JSON.stringify(pools)));
 				fpmDaemon().then(
