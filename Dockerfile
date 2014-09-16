@@ -98,7 +98,7 @@ EXPOSE 9000
 # Reset to default interactivity
 ENV DEBIAN_FRONTEND newt
 
-ENTRYPOINT ["docker-php.js"]
+ENTRYPOINT ["/app/docker-php.js"]
 CMD ["start"]
 
 

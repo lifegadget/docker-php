@@ -8,7 +8,6 @@ var
 	RSVP = require('rsvp'),
 	extend = require('xtend'),
 	Future = require('fibers/future'),
-	Fiber = require('fibers'),
 	debug = require('debug')('docker-php'),
 	chalk = require('chalk');
 	
@@ -65,7 +64,6 @@ var shell = function (params,options) {
 // -----------------------
 var shellSync = function (params,options) {
 	var future = new Future();
-	var shellResults = null;
 	options = extend({},options);
 	shell(params,options).then(
 		function(results) {
@@ -118,6 +116,32 @@ var fpmDaemon = function() {
 	});
 };
 
+var fpmProcesses = function() {
+	return new RSVP.Promise(function(resolve,reject) {
+		require('child_process').exec('ps -ef | grep -v grep | grep fpm', function(err, stdout, stderr) {
+			if (err) {
+				console.log(chalk.red('Problem getting FPM processes! [%s]\n') + chalk.grey(err.message), err.code);
+				reject(err);
+			}
+			resolve(stdout);
+		});
+	});
+};
+
+var exec = function(instruction, options) {
+	debug('Executing a child process');
+	return new RSVP.Promise(function(resolve,reject) {
+		require('child_process').exec(instruction, function(err, stdout, stderr) {
+			debug('back from child process');
+			if (err) {
+				debug('error in child process:', err );
+				reject(err,stderr);
+			}
+			resolve(stdout,stderr);
+		});
+	});
+}
+
 // ## Program options ##
 // ---------------------
 program 
@@ -157,20 +181,23 @@ program
 	.option('-v, --verbose', 'Shows all attributes of the lists versus just producing a simple named list')
 	.action(function(options) {
 		options = extend({},options);
-		shell(['ps','-ef','|','grep','fpm','|','grep','master']).then(function(results) {
-			console.log('Master process:: %s', results);
-			var params = results.split(/[ ,]+/); // user, process, parent-process, start-time, ?, ?, description
-			shell(['kill',params[1]]).then(
-				function() {
-					console.log(chalk.red('FPM process shutdown'));
-				},
-				function(err) {
-					console.error('%s\n%s', chalk.red('Problems shutting down FPM:\n'), chalk.grey() );
-				}
-			
-			);
-			
-		});
+		exec('ps -ef | grep -v grep | grep fpm | grep master').then(
+			function(results) {
+				var params = results.split(/[ ,]+/); // user, process, parent-process, start-time, ?, ?, description
+				console.log('Master process [%s]: %s', params[1], results);
+				exec('kill ' + params[1]).then(
+					function() {
+						console.log(chalk.green('FPM process shutdown'));
+					},
+					function(err) {
+						console.error('%s\n%s', chalk.red('Problems shutting down FPM:\n'), chalk.grey(err) );
+					}
+				);
+			},
+			function(err) {
+				console.log('%s\n%s', chalk.red('Problem getting FPM processes. Quitting.'), chalk.grey(JSON.stringify(err)));
+			}
+		);
 	}
 );
 	
@@ -181,7 +208,7 @@ program
 		options = extend({},options);
 		getPhpVersion().then(
 			function(results) {
-				console.log('Docker-PHP Bootstrap Script: %s', program.version() )
+				console.log('Docker-PHP Bootstrap Script: %s', program.version() );
 				console.log('FPM version: %s',chalk.bold(results));
 			}
 		);
@@ -193,14 +220,9 @@ program
 	.description('returns the version of PHP being used')
 	.action(function(options) {
 		options = extend({},options);
-		shell(['ps','-ef','|','grep','fpm']).then(
-			function(results) {
-				console.log('FPM running processes: \n%s', results);
-			},
-			function(err) {
-				console.log(chalk.red('Problem getting FPM processes! [%s]\n') + chalk.grey(err.message), err.code);
-			}
-		);
+		fpmProcesses().then(function(result) {
+			console.log(chalk.bold('FPM running processes: \n') + result);
+		});
 	}
 );
 
