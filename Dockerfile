@@ -49,7 +49,7 @@ RUN apt-get install -y vim curl
 # Install Node and dependencies for CLI/bootstrapper
 RUN apt-get install -y nodejs build-essential nodejs-legacy npm
 WORKDIR /app
-RUN cd /app && export USER=root; npm install commander chalk rsvp xtend
+RUN cd /app && export USER=root; npm install commander chalk rsvp xtend fibers debug
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker-php.js /app/docker-php.js
 RUN chmod +x /app/docker-php.js
 
@@ -59,14 +59,17 @@ RUN mkdir -p /app
 # if multiple services/apps being pooled then 
 # using a subdirectory per service is probably a good idea
 RUN mkdir -p /app/content
-# make a symbolic link with a friendlier name for host's run command
-RUN ln -s /app/content /app_root
-VOLUME /app_root
+# add a logging directory (global.conf points files here)
+RUN mkdir -p /app/log
+# create a subdirectory for resource files
 RUN mkdir -p /app/resources
 # to start, however, we'll just add a single index.php file
 # at the root that displays the phpinfo
 RUN echo "<?php phpinfo(); ?>" > /app/content/index.php
 RUN chown -R www-data:www-data /app
+# make a symbolic link with a friendlier name for host's run command
+RUN ln -s /app/content /app_root
+VOLUME /app_root
 
 # Include ascii logos
 ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker.txt /app/resources/docker.txt
@@ -95,7 +98,7 @@ EXPOSE 9000
 # Reset to default interactivity
 ENV DEBIAN_FRONTEND newt
 
-ENTRYPOINT ["/app/docker-php.js"]
+ENTRYPOINT ["docker-php.js"]
 CMD ["start"]
 
 

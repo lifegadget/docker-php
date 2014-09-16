@@ -7,6 +7,9 @@ var
 	fs = require('fs'),
 	RSVP = require('rsvp'),
 	extend = require('xtend'),
+	Future = require('fibers/future'),
+	Fiber = require('fibers'),
+	debug = require('debug')('docker-php'),
 	chalk = require('chalk');
 	
 // ### Display Logo ###
@@ -59,36 +62,28 @@ var shell = function (params,options) {
 };
 
 // ###Synchronous shell###
-// > DOES NOT WORK 
+// -----------------------
 var shellSync = function (params,options) {
-	options = extend({pollingInterval: 100},options);
+	var future = new Future();
 	var shellResults = null;
+	options = extend({},options);
 	shell(params,options).then(
 		function(results) {
-			console.log('Results: %s', results);
-			shellResults = results;
-			// return results;
+			debug('Synch shell returned with results: %s', results);
+			future.return({results: results});
 		},
 		function(err) {
-			console.log('Error: %s', err);
-			shellResults = err;
-			// return err;
+			debug('Synch shell experienced an error trying to run "%s": %s', JSON.stringify(params), err);
+			future.return({err: err});
 		}
 	);
 
-	var polling = setInterval(function() {
-		if(shellResults) {
-			console.log('results are available');
-			clearInterval(polling);
-			return shellResults;
-		}
-	},options.pollingInterval);
-	
-	while(1) {
-		// wait until a Promise is returned or is rejected 
-		// (and as a consequence sets the shellResults variable)
+	var ret = future.wait();
+	if(ret.err) {
+		throw ret.err;
+	} else {
+		return ret.results;
 	}
-	return shellResults;
 };
 
 // ### Get PHP Version ###
@@ -96,7 +91,7 @@ var shellSync = function (params,options) {
 // > utility function
 var getPhpVersion = function() {
 	return new RSVP.Promise(function(resolve,reject) {
-		shell(['php5-fpm','-v']).then(
+		shell(['php-fpm','-v']).then(
 			function(results) {
 				var versionNumber = results.split(' ')[1];
 				resolve(versionNumber);
@@ -112,7 +107,7 @@ var getPhpVersion = function() {
 // ----------------------
 var fpmDaemon = function() {
 	return new RSVP.Promise(function(resolve,reject) {
-		shell('/usr/sbin/php5-fpm').then(
+		shell('php-fpm').then(
 			function(results) {
 				resolve(results);
 			},
@@ -162,8 +157,22 @@ program
 	.option('-v, --verbose', 'Shows all attributes of the lists versus just producing a simple named list')
 	.action(function(options) {
 		options = extend({},options);
-		displayLogo();
-	});
+		shell(['ps','-ef','|','grep','fpm','|','grep','master']).then(function(results) {
+			console.log('Master process:: %s', results);
+			var params = results.split(/[ ,]+/); // user, process, parent-process, start-time, ?, ?, description
+			shell(['kill',params[1]]).then(
+				function() {
+					console.log(chalk.red('FPM process shutdown'));
+				},
+				function(err) {
+					console.error('%s\n%s', chalk.red('Problems shutting down FPM:\n'), chalk.grey() );
+				}
+			
+			);
+			
+		});
+	}
+);
 	
 program 
 	.command('info')
@@ -176,7 +185,24 @@ program
 				console.log('FPM version: %s',chalk.bold(results));
 			}
 		);
-	});
+	}
+);
+
+program 
+	.command('ps')
+	.description('returns the version of PHP being used')
+	.action(function(options) {
+		options = extend({},options);
+		shell(['ps','-ef','|','grep','fpm']).then(
+			function(results) {
+				console.log('FPM running processes: \n%s', results);
+			},
+			function(err) {
+				console.log(chalk.red('Problem getting FPM processes! [%s]\n') + chalk.grey(err.message), err.code);
+			}
+		);
+	}
+);
 
 	
 // ###Unknown Command###
