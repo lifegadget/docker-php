@@ -2,7 +2,6 @@ FROM ubuntu:14.04
 MAINTAINER LifeGadget <contact-us@lifegadget.co>
 
 # Setup Base Environment
-ENV DEBIAN_FRONTEND noninteractive
 # apt-get magic
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6AF0E1940624A220
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C
@@ -37,45 +36,40 @@ RUN apt-get install -y \
 RUN apt-get install -y \
 	php5-mcrypt \
 	php5-fpm
-# Create symlink to FPM to have more standard access to command
-# (this appears to happen on Ubuntu but not OSX for instance)
-RUN if [ -f /usr/sbin/php5-fpm ]; then \
-		ln -s /usr/sbin/php5-fpm /usr/sbin/php-fpm; \
-	fi;
 	
 # Helpful helpers
 RUN apt-get install -y vim curl
 
-# Install Node and dependencies for CLI/bootstrapper
-RUN apt-get install -y nodejs build-essential nodejs-legacy npm
-WORKDIR /app
-RUN cd /app && export USER=root; npm install commander chalk rsvp xtend fibers debug
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker-php.js /app/docker-php.js
-RUN chmod +x /app/docker-php.js
-RUN ln -s /app/docker-php.js /usr/local/bin/docker-php
-
 # App Directory / Subdirectories
-RUN mkdir -p /app
+RUN mkdir -p /php
+
+# Create share for configuration additions
+RUN mkdir -p /usr/local/nginx/conf.d \
+	&& mkdir -p /php \
+	&& ln -s /usr/local/nginx/conf.d /nginx/conf.d
+VOLUME ["/php/conf.d"]
+
+# Create share for taking over configuration
+VOLUME ["/php/conf"]
+
+
+
 # The default directory for content
 # if multiple services/apps being pooled then 
 # using a subdirectory per service is probably a good idea
-RUN mkdir -p /app/content
+RUN mkdir -p /php/content
 # add a logging directory (global.conf points files here)
-RUN mkdir -p /app/log
+RUN mkdir -p /php/log
 # create a subdirectory for resource files
-RUN mkdir -p /app/resources
+RUN mkdir -p /php/resources
 # to start, however, we'll just add a single index.php file
 # at the root that displays the phpinfo
-RUN echo "<?php phpinfo(); ?>" > /app/content/index.php
-RUN chown -R www-data:www-data /app
-# make a symbolic link with a friendlier name for host's run command
-RUN ln -s /app/content /app_root
-VOLUME /app_root
-# add convenience symlink to view 
+RUN echo "<?php phpinfo(); ?>" > /php/content/index.php
+RUN chown -R www-data:www-data /php
 
 # Include ascii logos
-ADD resources/docker.txt /app/resources/docker.txt
-ADD resources/php.txt /app/resources/php.txt
+ADD resources/docker.txt /php/resources/docker.txt
+ADD resources/php.txt /php/resources/php.txt
 
 # Baseline PHP-FPM Configuration
 RUN rm /etc/php5/fpm/php-fpm.conf
@@ -95,10 +89,8 @@ ADD resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-gener
 
 
 EXPOSE 9000
-# Reset to default interactivity
-ENV DEBIAN_FRONTEND newt
 
-ENTRYPOINT ["/app/docker-php.js"]
+ENTRYPOINT ["php5-fpm"]
 CMD ["start"]
 
 
