@@ -79,9 +79,9 @@ VOLUME ["/app/conf"]
 RUN mv /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/php-fpm.conf.template
 RUN mv /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.template
 # Pool Configurations
-RUN mkdir -p /app/pool.d
-ADD resources/php-pool-default.conf /app/pool.d/default.conf
-VOLUME ["/app/pool.d"]
+RUN mkdir -p /app/conf.d
+ADD resources/php-pool-default.conf /app/conf.d/default.conf
+VOLUME ["/app/conf.d"]
 
 # create index.php file at the root of content
 RUN echo "<?php phpinfo(); ?>" > /app/content/index.php
