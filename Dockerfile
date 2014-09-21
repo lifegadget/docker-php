@@ -24,11 +24,12 @@ RUN apt-get update
 ADD https://raw.githubusercontent.com/lifegadget/bashrc/master/snippets/history.sh /etc/bash.history
 ADD https://raw.githubusercontent.com/lifegadget/bashrc/master/snippets/color.sh /etc/bash.color
 ADD https://raw.githubusercontent.com/lifegadget/bashrc/master/snippets/shortcuts.sh /etc/bash.shortcuts
-RUN echo " \
-	source /etc/bash.history \n\
-	source /etc/bash.color \n\
-	source /etc/bash.shortcuts \n\
-	" >> /etc/bash.bashrc
+RUN { \
+		echo ""; \
+		echo 'source /etc/bash.history'; \
+		echo 'source /etc/bash.color'; \
+		echo 'source /etc/bash.shortcuts'; \
+	} >> /etc/bash.bashrc
 
 # Install PHP
 RUN apt-get install -y \
@@ -50,55 +51,57 @@ RUN apt-get install -y vim curl
 RUN apt-get install -y nodejs build-essential nodejs-legacy npm
 WORKDIR /app
 RUN cd /app && export USER=root; npm install commander chalk rsvp xtend fibers debug
-ADD https://raw.githubusercontent.com/lifegadget/docker-php/master/resources/docker-php.js /app/docker-php.js
-RUN chmod +x /app/docker-php.js
-RUN ln -s /app/docker-php.js /usr/local/bin/docker-php
+ADD resources/docker-php.js /app/resources/docker-php.js
+RUN chmod +x /app/resources/docker-php.js
+# Put the bootstrapper into the PATH
+RUN ln -s /app/resources/docker-php.js /usr/local/bin/docker-php
 
 # App Directory / Subdirectories
 RUN mkdir -p /app
 # The default directory for content
 # if multiple services/apps being pooled then 
 # using a subdirectory per service is probably a good idea
-RUN mkdir -p /app/content
-# add a logging directory (global.conf points files here)
-RUN mkdir -p /app/log
-# create a subdirectory for resource files
+RUN mkdir -p /app/html
+VOLUME ["/app/html"]
+# logging directory for FPM and PHP errors/info
+RUN mkdir -p /app/logs
+# template-based resource files
 RUN mkdir -p /app/resources
-# to start, however, we'll just add a single index.php file
-# at the root that displays the phpinfo
+# for Unix sockets
+RUN mkdir -p /app/sockets
+VOLUME ["/app/sockets"]
+# Baseline config
+RUN mkdir -p /app/config
+ADD resources/php-fpm.conf /app/conf/php-fpm.conf
+ADD resources/php.ini /app/conf/php.ini
+VOLUME ["/app/conf"]
+# Move originals out of the way
+RUN mv /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/php-fpm.conf.template
+RUN mv /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.template
+# Pool Configurations
+RUN mkdir -p /app/pool.d
+ADD resources/php-pool-default.conf /app/pool.d/default.conf
+VOLUME ["/app/pool.d"]
+
+# create index.php file at the root of content
 RUN echo "<?php phpinfo(); ?>" > /app/content/index.php
+# set app ownership
 RUN chown -R www-data:www-data /app
-# make a symbolic link with a friendlier name for host's run command
-RUN ln -s /app/content /app_root
-VOLUME /app_root
-# add convenience symlink to view 
 
 # Include ascii logos
 ADD resources/docker.txt /app/resources/docker.txt
 ADD resources/php.txt /app/resources/php.txt
 
-# Baseline PHP-FPM Configuration
-RUN rm /etc/php5/fpm/php-fpm.conf
-ADD resources/php-fpm.conf /etc/php5/fpm/php-fpm.conf
-# Baseline PHP.INI
-RUN rm /etc/php5/fpm/php.ini
-ADD resources/php.ini /etc/php5/fpm/php.ini
-
-# Add a default pool service for now, this default will be removed automatically when the first 
-# service is added
-ADD resources/php-pool-default.ini /etc/php5/fpm/pool.d/default.conf
 # Add some generic templates for use later when adding services
 RUN mkdir -p /etc/php5/fpm/templates
 ADD resources/php-pool-generic-header.ini /etc/php5/fpm/templates/php-pool-generic-header.ini
 ADD resources/php-pool-generic-config.ini /etc/php5/fpm/templates/php-pool-generic-config.ini
-# Remove dummy 
-
 
 EXPOSE 9000
 # Reset to default interactivity
 ENV DEBIAN_FRONTEND newt
 
-ENTRYPOINT ["/app/docker-php.js"]
+ENTRYPOINT ["docker-php"]
 CMD ["start"]
 
 
