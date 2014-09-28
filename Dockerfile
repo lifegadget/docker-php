@@ -15,7 +15,7 @@ RUN echo 'APT::Install-Recommends "0"; \n\
 		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty main restricted universe multiverse \n\
 		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-updates main restricted universe multiverse \n\
 		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-backports main restricted universe multiverse \n\
-		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-security main restricted universe multiverse \n\
+		deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-security main  restricted universe multiverse \n\
 		deb http://ppa.launchpad.net/ondrej/php5/ubuntu trusty main \n\
 		deb-src http://ppa.launchpad.net/ondrej/php5/ubuntu trusty main \n" \ 
 		> /etc/apt/sources.list \
@@ -35,25 +35,26 @@ RUN { \
 RUN apt-get install -y \
 	php5 \
 	php5-mcrypt \
-	php5-fpm
-# Helpful helpers
-RUN apt-get install -y vim curl
+	php5-fpm \
+	vim \
+	curl
 
 # Setup App Directory structure
 RUN mkdir -p /app \
-	&& mkdir -p /app/html \
+	&& mkdir -p /app/content \
+	&& mkdir -p /app/content/fpm \
 	&& mkdir -p /app/logs \
 	&& mkdir -p /app/sockets \
 	&& mkdir -p /app/conf \
 	&& mkdir -p /app/conf.d \
 	&& mkdir -p /app/resources
 	
-# Baseline config
-ADD resources/php-fpm.conf /app/conf/php-fpm.conf 
-ADD resources/php.ini /app/conf/php.ini
-ADD resources/php-pool-default.conf /app/conf.d/default.conf
-RUN echo "<?php phpinfo(); ?>" > /app/html/index.php \
-	&& chown -R www-data:www-data /app
+# Baseline configCOPY 
+COPY resources/php-fpm.conf /app/conf/php-fpm.conf 
+COPY resources/php.ini /app/conf/php.ini
+COPY resources/default.conf /app/conf.d/default.conf
+RUN echo "<?php phpinfo(); ?>" > /app/content/fpm/index.php \
+	&& chown -R www-data:www-data /app 
 # Move originals out of the way, create symlink to new source (for commands like "service php5-fpm reload", etc.)
 RUN mv /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/php-fpm.conf.template \
 	&& mv /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.template \
@@ -61,7 +62,7 @@ RUN mv /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/php-fpm.conf.template \
 	&& ln -s /app/conf/php-fpm.conf  /etc/php5/fpm/php-fpm.conf 
 		
 # Volume Shares
-VOLUME ["/app/html"]
+VOLUME ["/app/content"]
 VOLUME ["/app/sockets"]
 VOLUME ["/app/conf"]
 VOLUME ["/app/conf.d"]
@@ -74,5 +75,6 @@ ADD resources/php.txt /app/resources/php.txt
 ADD resources/docker.txt /app/resources/docker.txt
 
 ENV DEBIAN_FRONTEND newt
+WORKDIR /app
 ENTRYPOINT ["fpm-bootstrapper.sh"]
 
