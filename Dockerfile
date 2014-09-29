@@ -71,12 +71,11 @@ VOLUME ["/app/conf.d"]
 VOLUME ["/app/logs"]
 
 # Add resources
-ADD resources/fpm-bootstrapper.sh /usr/local/bin/fpm-bootstrapper.sh
-RUN chmod +x /usr/local/bin/fpm-bootstrapper.sh
 ADD resources/php.txt /app/resources/php.txt
 ADD resources/docker.txt /app/resources/docker.txt
 
 ENV DEBIAN_FRONTEND newt
-WORKDIR /app
-CMD ["php5-fpm", "-c", "/app/conf/php.ini", "--fpm-conf", "/app/conf/php-fpm.conf"]
+WORKDIR /app 
+ENTRYPOINT ["php5-fpm"]
+# CMD ["-c", "/app/conf/php.ini", "--fpm-conf", "/app/conf/php-fpm.conf"]
 
