@@ -53,9 +53,11 @@ RUN mkdir -p /app \
 COPY resources/php-fpm.conf /app/conf/php-fpm.conf 
 COPY resources/php.ini /app/conf/php.ini
 COPY resources/default.conf /app/conf.d/default.conf
+# Create some basic content pages for testing purposes
 RUN echo "<?php phpinfo(); ?>" > /app/content/fpm/index.php \
+	&& echo "<pre><?php var_export(\$_SERVER); ?></pre>" > /app/content/fpm/server.php \
 	&& chown -R www-data:www-data /app 
-# Move originals out of the way, create symlink to new source (for commands like "service php5-fpm reload", etc.)
+# Move original config files out of the way, create symlink to new source (for commands like "service php5-fpm reload", etc.)
 RUN mv /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/php-fpm.conf.template \
 	&& mv /etc/php5/fpm/php.ini /etc/php5/fpm/php.ini.template \
 	&& ln -s /app/conf/php.ini  /etc/php5/fpm/php.ini \
@@ -76,5 +78,5 @@ ADD resources/docker.txt /app/resources/docker.txt
 
 ENV DEBIAN_FRONTEND newt
 WORKDIR /app
-ENTRYPOINT ["fpm-bootstrapper.sh"]
+CMD ["php5-fpm", "-c", "/app/conf/php.ini", "--fpm-conf", "/app/conf/php-fpm.conf"]
 
