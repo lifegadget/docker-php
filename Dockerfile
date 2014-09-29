@@ -37,7 +37,15 @@ RUN apt-get install -y \
 	php5-mcrypt \
 	php5-fpm \
 	vim \
-	curl
+	wget
+	
+# Install Couchbase C-library 
+RUN wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/ubuntu/couchbase-ubuntu1404.list \
+		&& wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add - \
+		&& apt-get update \
+		&& apt-get install -y --no-install-recommends libcouchbase2-libevent libcouchbase-dev php-pear php5-dev make \
+		&& pecl install couchbase --alldeps 
+# TODO: add some cleanup after couchbase built
 
 # Setup App Directory structure
 RUN mkdir -p /app \
@@ -49,7 +57,7 @@ RUN mkdir -p /app \
 	&& mkdir -p /app/conf.d \
 	&& mkdir -p /app/resources
 	
-# Baseline configCOPY 
+# Baseline config
 COPY resources/php-fpm.conf /app/conf/php-fpm.conf 
 COPY resources/php.ini /app/conf/php.ini
 COPY resources/default.conf /app/conf.d/default.conf

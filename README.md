@@ -50,9 +50,8 @@ Feel free to use and we are happy to accept PR's if you have ideas you feel woul
 	So let's assume that you want your own content and you're interested in gaining visibility to logs from the host, you'd type:
 
 	````bash
-	sudo docker run -d lifegadget/nginx -p 80:80 --link PHP:PHP \
+	sudo docker run -d lifegadget/docker-php  \
 		-v /container/content:/app/content \
-		-v /container/conf.d:/app/conf.d \
 		-v /container/logs:/app/logs
 	````
 
