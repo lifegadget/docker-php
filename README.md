@@ -8,7 +8,7 @@ This is meant as a way to provide the PHP through a running FPM/FastCGI architec
 While not necessary to use with these other containers, both of the following cooperate to create a full stack and follow similar naming conventions:
 
 - NGINX Webserver - [lifegadget/docker-nginx](https://github.com/lifegadget/docker-nginx)
-- Couchbase Server - [lifegadget/docker-coachbase](https://github.com/lifegadget/docker-couchbase)
+- Couchbase Server - [lifegadget/docker-couchbase](https://github.com/lifegadget/docker-couchbase)
 
 Feel free to use and we are happy to accept PR's if you have ideas you feel would be generally reusable.
 
