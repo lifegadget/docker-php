@@ -39,12 +39,24 @@ RUN apt-get install -y \
 	vim \
 	wget
 	
-# Install Couchbase C-library 
+# Install Couchbase C-library and PECL extension
 RUN wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/ubuntu/couchbase-ubuntu1404.list \
 		&& wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add - \
 		&& apt-get update \
-		&& apt-get install -y --no-install-recommends libcouchbase2-libevent libcouchbase-dev php-pear php5-dev make \
-		&& pecl install couchbase --alldeps 
+		&& apt-get install -y --no-install-recommends pkg-config libcouchbase2-libevent libcouchbase-dev libmemcached-dev php-pear php5-dev make \
+		&& pecl config-set php_ini /app/conf/php.ini \
+		&& pecl install couchbase --alldeps \
+		&& pecl install memcached --alldeps \
+		&& { \
+			echo "; Couchbase PHP SDK"; \
+			echo "extension=/usr/lib/php5/20121212/couchbase.so"; \
+		} > /etc/php5/fpm/conf.d/30-couchbase.ini \
+		&& cp /etc/php5/fpm/conf.d/30-couchbase.ini /etc/php5/cli/conf.d \
+		&& { \
+			echo "; Memcached PHP SDK"; \
+			echo "extension=/usr/lib/php5/20121212/memcached.so"; \
+		} > /etc/php5/fpm/conf.d/30-memcached.ini \
+		&& cp /etc/php5/fpm/conf.d/30-memcached.ini /etc/php5/cli/conf.d
 # TODO: add some cleanup after couchbase built
 
 # Setup App Directory structure
@@ -81,9 +93,12 @@ VOLUME ["/app/logs"]
 # Add resources
 ADD resources/php.txt /app/resources/php.txt
 ADD resources/docker.txt /app/resources/docker.txt
+ADD resources/docker-php /app/resources/docker-php 
+RUN chmod +x /app/resources/docker-php \
+	&& ln -s /app/resources/docker-php /usr/local/bin/docker-php
 
 ENV DEBIAN_FRONTEND newt
 WORKDIR /app 
-ENTRYPOINT ["php5-fpm"]
-# CMD ["-c", "/app/conf/php.ini", "--fpm-conf", "/app/conf/php-fpm.conf"]
+# ENTRYPOINT ["php5-fpm"]
+ENTRYPOINT ["docker-php"]
 
