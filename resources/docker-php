@@ -4,7 +4,12 @@ echo "";
 cat /app/resources/docker.txt
 echo "";
 echo "";
-echo "setting ownership for all app related content to www-data:www-data"
+echo "setting ownership for all app related content to www-data:www-data";
 chown -R www-data:www-data /app
-echo "setting execution permissions to all content [/app/content]"
+echo "setting execution permissions to all content [/app/content]";
+echo "";
+echo "PHP configuration settings are:";
+echo "-------------------------------"
+php --ini
+# Start FPM
 exec php5-fpm -c /app/conf/php.ini --fpm-config /app/conf/php-fpm.conf "$@" 
