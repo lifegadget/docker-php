@@ -45,11 +45,18 @@ RUN wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/
 		&& apt-get update \
 		&& apt-get install -y --no-install-recommends pkg-config libcouchbase2-libevent libcouchbase-dev libmemcached-dev php-pear php5-dev make \
 		&& pecl config-set php_ini /app/conf/php.ini \
-		&& pecl install couchbase --alldeps \
+		&& pecl install couchbase-1.2.2 \
 		&& pecl install memcached --alldeps \
 		&& { \
 			echo "; Couchbase PHP SDK"; \
 			echo "extension=/usr/lib/php5/20121212/couchbase.so"; \
+			echo "couchbase.serializer = php"; \
+			echo "couchbase.compressor = none"; \
+			echo "couchbase.compression_factor = 1.3"; \
+			echo "couchbase.compression_threshold = 2000"; \
+			echo "couchbase.restflush = On"; \
+			echo "; Experimental performance optimizer"; \
+			echo "couchbase.config_cache = \"/app/cache/couchbase\""; \
 		} > /etc/php5/fpm/conf.d/30-couchbase.ini \
 		&& cp /etc/php5/fpm/conf.d/30-couchbase.ini /etc/php5/cli/conf.d \
 		&& { \
@@ -67,7 +74,9 @@ RUN mkdir -p /app \
 	&& mkdir -p /app/sockets \
 	&& mkdir -p /app/conf \
 	&& mkdir -p /app/conf.d \
-	&& mkdir -p /app/resources
+	&& mkdir -p /app/resources \
+	&& mkdir -p /app/cache \
+	&& mkdir -p /app/cache/couchbase
 	
 # Baseline config
 COPY resources/php-fpm.conf /app/conf/php-fpm.conf 
