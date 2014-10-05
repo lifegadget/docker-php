@@ -27,6 +27,7 @@ Feel free to use and we are happy to accept PR's if you have ideas you feel woul
 
 	- `index.php` - this provides a print out of PHP's well known `phpinfo()` function
 	- `server.php` - this provides a listing of all `$_SERVER` variables passed into FPM
+	- `couchbase.php` - assuming you're running and linking the `lifegadget/docker-couchbase` container, you can run this script and it should insert and then read 5 records into/from the "default" bucket (use the default "create" command to ensure you have buckets setup).
 
 	If you're using this in conjunction with `lifegadget/docker-nginx` then these two PHP scripts will be available off the "fpm" root (aka, `http://localhost/fpm`). Enjoy you're done ... but you're going to probably at least put in your own content, right? Turn to the advanced section (which isn't really that advance for that and more).
 

@@ -103,6 +103,7 @@ VOLUME ["/app/logs"]
 ADD resources/php.txt /app/resources/php.txt
 ADD resources/docker.txt /app/resources/docker.txt
 ADD resources/docker-php /app/resources/docker-php 
+ADD resources/couchbase.php /app/content/fpm/couchbase.php 
 RUN chmod +x /app/resources/docker-php \
 	&& ln -s /app/resources/docker-php /usr/local/bin/docker-php
 
