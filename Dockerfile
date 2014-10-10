@@ -68,6 +68,8 @@ RUN wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/
 
 # Setup App Directory structure
 RUN mkdir -p /app \
+	&& mkdir -p /storage \
+	&& mkdir -p /storage/fpm \
 	&& mkdir -p /app/content \
 	&& mkdir -p /app/content/fpm \
 	&& mkdir -p /app/logs \
@@ -76,15 +78,15 @@ RUN mkdir -p /app \
 	&& mkdir -p /app/conf.d \
 	&& mkdir -p /app/resources \
 	&& mkdir -p /app/cache \
-	&& mkdir -p /app/cache/couchbase
+	&& mkdir -p /app/cache/couchbase 
 	
 # Baseline config
 COPY resources/php-fpm.conf /app/conf/php-fpm.conf 
 COPY resources/php.ini /app/conf/php.ini
 COPY resources/default.conf /app/conf.d/default.conf
 # Create some basic content pages for testing purposes
-RUN echo "<?php phpinfo(); ?>" > /app/content/fpm/index.php \
-	&& echo "<pre><?php var_export(\$_SERVER); ?></pre>" > /app/content/fpm/server.php \
+RUN echo "<?php phpinfo(); ?>" > /storage/fpm/index.php \
+	&& echo "<pre><?php var_export(\$_SERVER); ?></pre>" > /storage/fpm/server.php \
 	&& chown -R www-data:www-data /app 
 # Move original config files out of the way, create symlink to new source (for commands like "service php5-fpm reload", etc.)
 RUN mv /etc/php5/fpm/php-fpm.conf /etc/php5/fpm/php-fpm.conf.template \
@@ -103,12 +105,16 @@ VOLUME ["/app/logs"]
 ADD resources/php.txt /app/resources/php.txt
 ADD resources/docker.txt /app/resources/docker.txt
 ADD resources/docker-php /app/resources/docker-php 
-ADD resources/couchbase.php /app/content/fpm/couchbase.php 
+ADD resources/couchbase.php /storage/fpm/couchbase.php 
 RUN chmod +x /app/resources/docker-php \
 	&& ln -s /app/resources/docker-php /usr/local/bin/docker-php
+	
+# Add home directory for ubuntu so that commmand which save to home directory don't error out (e.g., vim);
+# Note: still owned by root but there is no ubuntu user recognized by system	
+RUN mkdir -p /home/ubuntu 
 
 ENV DEBIAN_FRONTEND newt
 WORKDIR /app 
-# ENTRYPOINT ["php5-fpm"]
+ENV COUCHBASE_IP "CB"
 ENTRYPOINT ["docker-php"]
 

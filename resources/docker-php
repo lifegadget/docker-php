@@ -11,5 +11,9 @@ echo "";
 echo "PHP configuration settings are:";
 echo "-------------------------------"
 php --ini
+echo "";
+echo "Relevant ENV variables:";
+echo "-----------------------";
+env | grep 'COUCH\|DOCKER\|PHP\|USER\|HOME'
 # Start FPM
 exec php5-fpm -c /app/conf/php.ini --fpm-config /app/conf/php-fpm.conf "$@" 
