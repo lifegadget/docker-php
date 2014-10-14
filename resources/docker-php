@@ -1,4 +1,17 @@
 #!/bin/bash
+logFile="/var/log/docker-cli.log"
+
+function logIt() {
+	timestamp=$( date )
+	if [ -z "$2" ];then
+		severity="INFO"
+	else
+		severity="$2"
+	fi
+	echo "{ \"timestamp\": \"$timestamp\", \"severity\":\"$severity\", \"message\": \"$1\" }" >> $logFile
+	echo $1;
+}
+
 cat /app/resources/php.txt
 echo "";
 cat /app/resources/docker.txt
@@ -16,4 +29,7 @@ echo "Relevant ENV variables:";
 echo "-----------------------";
 env | grep 'COUCH\|DOCKER\|PHP\|USER\|HOME'
 # Start FPM
+/opt/lumberjack/bin/lumberjack -config /app/conf/logstash-forwarder.conf &
+# service lumberjack start
+logIt "PHP-FPM Docker container started"
 exec php5-fpm -c /app/conf/php.ini --fpm-config /app/conf/php-fpm.conf "$@" 

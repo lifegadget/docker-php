@@ -43,7 +43,7 @@ RUN apt-get install -y \
 RUN wget -O/etc/apt/sources.list.d/couchbase.list http://packages.couchbase.com/ubuntu/couchbase-ubuntu1404.list \
 		&& wget -O- http://packages.couchbase.com/ubuntu/couchbase.key | sudo apt-key add - \
 		&& apt-get update \
-		&& apt-get install -y --no-install-recommends pkg-config libcouchbase2-libevent libcouchbase-dev libmemcached-dev php-pear php5-dev make \
+		&& apt-get install -y --no-install-recommends pkg-config libcouchbase2-libevent libcouchbase-dev libmemcached-dev php-pear php5-dev make  \
 		&& pecl config-set php_ini /app/conf/php.ini \
 		&& pecl install couchbase-1.2.2 \
 		&& pecl install memcached --alldeps \
@@ -73,6 +73,7 @@ RUN mkdir -p /app \
 	&& mkdir -p /app/content \
 	&& mkdir -p /app/content/fpm \
 	&& mkdir -p /app/logs \
+	&& mkdir -p /app/certs \
 	&& mkdir -p /app/sockets \
 	&& mkdir -p /app/conf \
 	&& mkdir -p /app/conf.d \
@@ -108,7 +109,16 @@ ADD resources/docker-php /app/resources/docker-php
 ADD resources/couchbase.php /storage/fpm/couchbase.php 
 RUN chmod +x /app/resources/docker-php \
 	&& ln -s /app/resources/docker-php /usr/local/bin/docker-php
-	
+		
+# Lumberjack and Logging
+ENV LUMBERJACK_VERSION 0.3.1
+RUN	wget --no-check-certificate -O/tmp/lumberjack_${LUMBERJACK_VERSION}_amd64.deb https://github.com/lifegadget/lumberjack-builder/raw/master/resources/lumberjack_${LUMBERJACK_VERSION}_amd64.deb \
+	&& dpkg -i /tmp/lumberjack_${LUMBERJACK_VERSION}_amd64.deb \
+	&& rm /tmp/lumberjack_${LUMBERJACK_VERSION}_amd64.deb 
+COPY resources/logstash-forwarder.conf /app/conf/logstash-forwarder.conf
+COPY resources/logstash-init /etc/init.d/lumberjack
+COPY resources/logstash-defaults /etc/default/lumberjack
+
 # Add home directory for ubuntu so that commmand which save to home directory don't error out (e.g., vim);
 # Note: still owned by root but there is no ubuntu user recognized by system	
 RUN mkdir -p /home/ubuntu 
